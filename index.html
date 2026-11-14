@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050505">
+<title>Start Editor — 全版本下载</title>
+<style>
+/* ============ Tokens ============ */
+:root{
+  --bg:#050505;
+  --surface:#0b0b0d;
+  --surface-2:#111113;
+  --surface-3:#18181b;
+  --line:rgba(255,255,255,.085);
+  --line-hi:rgba(255,255,255,.19);
+  --text:#f3f1ed;
+  --text-2:#a3a2a0;
+  --muted:#717174;
+  --faint:#4a4a4e;
+  --accent:#d4f66a;
+  --accent-dim:rgba(212,246,106,.13);
+  --blue:#9fb4ff;
+  --amber:#f0c479;
+  --radius:16px;
+  --font:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body.no-scroll{overflow:hidden}
+::selection{background:var(--accent);color:#080808}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+svg{display:block}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#080808}
+::-webkit-scrollbar-thumb{background:#262629;border-radius:10px;border:2px solid #080808}
+::-webkit-scrollbar-thumb:hover{background:#3a3a3e}
+input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+
+.wrap{width:min(1240px,calc(100% - 64px));margin-inline:auto}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--accent);display:block}
+
+/* ============ Ambient ============ */
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ambient::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.023) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.023) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 0%,transparent 78%);-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 0%,transparent 78%)}
+.glow{position:absolute;width:900px;height:640px;border-radius:50%;background:radial-gradient(circle,rgba(212,246,106,.085) 0%,rgba(120,150,255,.035) 38%,transparent 70%);filter:blur(40px);left:var(--gx,50%);top:var(--gy,8%);transform:translate(-50%,-50%);transition:left .5s var(--ease),top .5s var(--ease)}
+.glow.b{width:700px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.05),transparent 70%);left:82%;top:38%}
+
+/* ============ Nav ============ */
+.nav{position:sticky;top:0;z-index:60;background:rgba(5,5,5,.72);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+.nav.scrolled{border-bottom-color:var(--line);background:rgba(5,5,5,.88)}
+.nav-in{height:72px;display:flex;align-items:center;gap:36px}
+.brand{display:flex;align-items:center;gap:11px;flex-shrink:0}
+.brand-mark{width:30px;height:30px;border-radius:9px;background:var(--text);display:grid;place-items:center;position:relative;overflow:hidden}
+.brand-mark::after{content:"";position:absolute;width:11px;height:11px;border:2.5px solid #050505;border-radius:3px;transform:rotate(45deg);left:7px;top:7px}
+.brand-mark i{position:absolute;width:2px;height:15px;background:#050505;left:18px;top:7px;transform:rotate(45deg)}
+.brand-name{font-size:16px;font-weight:650;letter-spacing:-.035em;white-space:nowrap}
+.brand-name span{color:var(--muted);font-weight:450}
+.nav-links{display:flex;gap:28px;align-items:center;margin-left:14px}
+.nav-links a{font-size:13px;color:var(--text-2);transition:color .2s;position:relative;white-space:nowrap}
+.nav-links a:hover{color:var(--text)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.nav-search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px 8px 12px;width:220px;transition:border-color .2s,width .3s var(--ease)}
+.nav-search:focus-within{border-color:var(--line-hi);width:260px}
+.nav-search input{border:0;outline:0;background:transparent;width:100%;font-size:12.5px}
+.nav-search input::placeholder{color:var(--faint)}
+.kbd{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);padding:4px 7px;border-radius:6px;line-height:1;white-space:nowrap}
+.icon-btn{width:36px;height:36px;border:1px solid var(--line);border-radius:9px;display:grid;place-items:center;color:var(--text-2);transition:.2s;font-size:12px;font-weight:600}
+.icon-btn:hover{border-color:var(--line-hi);color:var(--text);background:var(--surface)}
+.btn-primary{background:var(--text);color:#070707;border-radius:9px;padding:11px 18px;font-size:12.5px;font-weight:650;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:9px;transition:transform .2s var(--ease),background .2s,box-shadow .2s;white-space:nowrap}
+.btn-primary:hover{transform:translateY(-2px);background:#fff;box-shadow:0 10px 30px rgba(255,255,255,.12)}
+.btn-primary .arw{font-size:15px;line-height:1}
+.btn-ghost{border:1px solid var(--line);border-radius:9px;padding:11px 18px;font-size:12.5px;color:var(--text-2);transition:.2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.btn-ghost:hover{border-color:var(--line-hi);color:var(--text);background:var(--surface)}
+.btn-sm{padding:9px 13px;font-size:11.5px;border-radius:8px}
+
+/* ============ Hero ============ */
+.hero{position:relative;z-index:1;padding:88px 0 84px}
+.hero-grid{display:grid;grid-template-columns:1fr 1.02fr;gap:64px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:rgba(255,255,255,.025);border-radius:100px;padding:8px 15px;font-size:10.5px;color:var(--text-2);letter-spacing:.08em;margin-bottom:30px;font-family:var(--mono)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);flex-shrink:0}
+.hero h1{font-size:clamp(44px,5.6vw,76px);line-height:1.02;letter-spacing:-.06em;font-weight:600;margin:0 0 20px}
+.hero h1 em{font-family:var(--serif);font-weight:400;font-style:italic;letter-spacing:-.045em;color:var(--text-2)}
+html[lang="zh-CN"] .hero h1{font-size:clamp(38px,5vw,64px);line-height:1.16;letter-spacing:-.045em}
+html[lang="zh-CN"] .hero h1 em{font-family:inherit;font-style:normal;font-weight:350;letter-spacing:-.045em}
+.hero-sub{color:var(--text-2);font-size:15px;line-height:1.8;max-width:470px;margin:0 0 32px}
+.latest{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.latest .ver{font-size:38px;font-weight:600;letter-spacing:-.055em;font-variant-numeric:tabular-nums;line-height:1}
+.latest .tag{font-size:10px;letter-spacing:.12em;font-weight:700;text-transform:uppercase;padding:5px 10px;border-radius:100px;background:var(--accent);color:#0a0a0a}
+.latest-meta{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:11.5px;font-family:var(--mono);letter-spacing:.02em;margin-bottom:30px}
+.latest-meta span{display:inline-flex;align-items:center;gap:7px}
+.latest-meta b{color:var(--text-2);font-weight:500}
+.hero-actions{display:flex;gap:11px;flex-wrap:wrap;margin-bottom:22px}
+.hero-note{display:flex;align-items:center;gap:9px;color:var(--faint);font-size:11.5px}
+
+/* App window mockup */
+.window-wrap{position:relative}
+.window{background:#0c0c0e;border:1px solid var(--line-hi);border-radius:14px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.02),inset 0 1px 0 rgba(255,255,255,.05);transform:perspective(1400px) rotateY(-6deg) rotateX(2deg);transition:transform .6s var(--ease)}
+.window-wrap:hover .window{transform:perspective(1400px) rotateY(-2deg) rotateX(1deg)}
+.win-bar{height:38px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px;padding:0 14px;background:#101012}
+.win-bar i{width:9px;height:9px;border-radius:50%;background:#2a2a2e;display:block}
+.win-bar .title{margin-left:12px;font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em}
+.win-bar .right{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--faint);border:1px solid var(--line);padding:3px 7px;border-radius:5px}
+.win-body{display:grid;grid-template-columns:132px 1fr;height:326px}
+.win-side{border-right:1px solid var(--line);padding:14px 12px;background:#0a0a0c}
+.win-side .lbl{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--faint);margin-bottom:12px}
+.win-side .file{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);padding:5px 0}
+.win-side .file.on{color:var(--text)}
+.win-side .file .sq{width:7px;height:7px;border:1px solid currentColor;opacity:.7;border-radius:2px}
+.win-side .file.on .sq{background:var(--accent);border-color:var(--accent);opacity:1}
+.win-main{position:relative;background:radial-gradient(ellipse 80% 70% at 50% 35%,rgba(212,246,106,.045),transparent 70%),#08080a;overflow:hidden}
+.win-tabs{height:32px;border-bottom:1px solid var(--line);display:flex;align-items:stretch}
+.win-tabs span{font-size:9.5px;color:var(--faint);padding:0 14px;display:flex;align-items:center;border-right:1px solid var(--line);font-family:var(--mono)}
+.win-tabs span.on{color:var(--text);background:rgba(255,255,255,.03);box-shadow:inset 0 -1px 0 var(--accent)}
+.win-canvas{position:absolute;inset:32px 0 26px 0;display:grid;place-items:center}
+.win-canvas svg{width:82%;height:82%}
+.win-status{position:absolute;bottom:0;left:0;right:0;height:26px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-family:var(--mono);font-size:9px;color:var(--faint);background:#0c0c0e}
+.win-status .g{color:var(--accent)}
+.float-chip{position:absolute;right:-16px;bottom:34px;background:var(--surface-2);border:1px solid var(--line-hi);border-radius:10px;padding:11px 14px;box-shadow:0 18px 50px rgba(0,0,0,.6);font-family:var(--mono);font-size:10px;color:var(--text-2);z-index:2}
+.float-chip b{color:var(--accent);display:block;font-size:12px;margin-bottom:4px;letter-spacing:.02em}
+
+/* ============ Platform strip ============ */
+.strip{position:relative;z-index:1;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.012)}
+.strip-in{display:grid;grid-template-columns:repeat(3,1fr);padding:0}
+.plat{display:flex;align-items:center;gap:16px;padding:26px 28px;border-right:1px solid var(--line);transition:background .25s;cursor:pointer;text-align:left;width:100%}
+.plat:last-child{border-right:0}
+.plat:hover{background:rgba(255,255,255,.028)}
+.plat .ic{width:42px;height:42px;border:1px solid var(--line);border-radius:11px;display:grid;place-items:center;color:var(--text-2);flex-shrink:0;background:var(--surface)}
+.plat:hover .ic{color:var(--accent);border-color:rgba(212,246,106,.3)}
+.plat .txt{flex:1;min-width:0}
+.plat .txt h4{font-size:14px;font-weight:600;letter-spacing:-.02em;margin:0 0 5px}
+.plat .txt p{font-size:11.5px;color:var(--muted);margin:0;font-family:var(--mono)}
+.plat .arw{color:var(--faint);font-size:16px;transition:transform .25s,color .25s}
+.plat:hover .arw{transform:translate(-3px,3px);color:var(--text)}
+
+/* ============ Sections ============ */
+section.block{position:relative;z-index:1;padding:92px 0 0}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:32px}
+.sec-head h2{font-size:clamp(30px,3.6vw,46px);letter-spacing:-.05em;font-weight:600;line-height:1.05;margin:14px 0 10px}
+.sec-head p{color:var(--muted);font-size:14px;margin:0;line-height:1.7;max-width:470px}
+.sec-head .side{color:var(--muted);font-size:11.5px;white-space:nowrap;padding-bottom:4px;font-family:var(--mono);letter-spacing:.06em}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 0 22px;border-top:1px solid var(--line)}
+.chips{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.chip{border:1px solid var(--line);border-radius:100px;padding:9px 15px;font-size:12.5px;color:var(--text-2);transition:.2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.chip:hover{border-color:var(--line-hi);color:var(--text)}
+.chip.on{background:var(--text);color:#080808;border-color:var(--text);font-weight:600}
+.chip .c{font-size:10.5px;opacity:.55;font-variant-numeric:tabular-nums}
+.tool-right{display:flex;align-items:center;gap:12px}
+.count{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.select-wrap{position:relative}
+.select-wrap select{appearance:none;-webkit-appearance:none;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 34px 10px 13px;font-size:12.5px;color:var(--text-2);outline:0;cursor:pointer;transition:.2s}
+.select-wrap select:hover{border-color:var(--line-hi)}
+.select-wrap::after{content:"";position:absolute;right:13px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.select-wrap select option{background:#111;color:#eee}
+
+/* Release timeline */
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:linear-gradient(180deg,var(--accent),rgba(255,255,255,.09) 22%,rgba(255,255,255,.05))}
+.release{position:relative;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:22px 24px;margin-bottom:14px;display:grid;grid-template-columns:190px 1fr auto;gap:26px;align-items:center;transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;opacity:0;transform:translateY(16px)}
+.release.in{opacity:1;transform:none}
+.release::before{content:"";position:absolute;left:-27px;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line-hi)}
+.release.is-latest::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 14px var(--accent)}
+.release:hover{transform:translateY(-3px);border-color:var(--line-hi);box-shadow:0 18px 44px rgba(0,0,0,.5)}
+.rel-ver .num{font-size:24px;font-weight:600;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1.1;margin-bottom:9px}
+.rel-ver .sub{font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.05em;margin-top:8px}
+.badge{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:4px 9px;border-radius:100px;border:1px solid var(--line-hi);color:var(--text-2)}
+.badge.stable{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+.badge.beta{color:var(--blue);border-color:rgba(159,180,255,.35);background:rgba(159,180,255,.09)}
+.badge.rc{color:var(--amber);border-color:rgba(240,196,121,.35);background:rgba(240,196,121,.08)}
+.badge.legacy{color:var(--muted)}
+.badge.new{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+.rel-main h3{font-size:14.5px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.rel-main p{font-size:12.5px;color:var(--text-2);line-height:1.65;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rel-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rel-tags span{font-family:var(--mono);font-size:9.5px;color:var(--muted);background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:5px;padding:4px 7px;letter-spacing:.03em;display:inline-flex;align-items:center;gap:5px}
+.rel-tags span.na{opacity:.32;text-decoration:line-through}
+.rel-side{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:11px}
+.rel-date{font-family:var(--mono);font-size:10.5px;color:var(--muted);white-space:nowrap}
+.rel-date b{color:var(--text-2);font-weight:500}
+.rel-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dl-mini{padding:8px 11px;font-size:11px;gap:6px}
+.dl-mini svg{opacity:.85}
+.empty{display:none;text-align:center;padding:80px 20px;border:1px dashed var(--line);border-radius:var(--radius)}
+.empty.show{display:block}
+.empty .big{font-size:38px;margin-bottom:14px;color:var(--faint)}
+.empty h3{font-size:18px;margin:0 0 8px;font-weight:600}
+.empty p{color:var(--muted);font-size:13px;margin:0 0 20px}
+
+/* ============ Info / install ============ */
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.info-card{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:26px;transition:border-color .3s}
+.info-card:hover{border-color:var(--line-hi)}
+.info-card .ic{width:38px;height:38px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;color:var(--accent);margin-bottom:20px;background:var(--surface-2)}
+.info-card h3{font-size:15px;font-weight:600;margin:0 0 12px;letter-spacing:-.02em}
+.info-card ul{list-style:none;margin:0;padding:0}
+.info-card li{font-size:12.5px;color:var(--text-2);line-height:1.75;padding:5px 0 5px 15px;position:relative}
+.info-card li::before{content:"";position:absolute;left:0;top:12px;width:5px;height:1px;background:var(--accent)}
+.info-card .foot{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.info-card .foot a{color:var(--text-2);border-bottom:1px solid var(--line-hi)}
+
+/* ============ CTA ============ */
+.cta{position:relative;z-index:1;margin:104px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:radial-gradient(ellipse 60% 120% at 50% 100%,rgba(212,246,106,.07),transparent 70%)}
+.cta-in{padding:90px 0;text-align:center}
+.cta h2{font-size:clamp(32px,4.8vw,60px);letter-spacing:-.055em;font-weight:600;line-height:1.05;margin:18px 0 18px}
+.cta p{color:var(--text-2);font-size:14.5px;margin:0 auto 30px;max-width:560px;line-height:1.8}
+.cta .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ============ Footer ============ */
+footer{position:relative;z-index:1;padding:62px 0 32px}
+.foot-top{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:40px;padding-bottom:52px;border-bottom:1px solid var(--line)}
+.foot-brand p{color:var(--muted);font-size:13px;line-height:1.75;max-width:290px;margin:18px 0 0}
+.foot-col h4{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);margin:0 0 18px;font-weight:600}
+.foot-col a{display:block;color:var(--text-2);font-size:13px;margin-bottom:12px;transition:color .2s}
+.foot-col a:hover{color:var(--text)}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding-top:26px;color:var(--faint);font-size:11.5px}
+.foot-bottom .demo{display:inline-flex;align-items:center;gap:8px;color:var(--muted)}
+
+/* ============ Modal ============ */
+.backdrop{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
+.backdrop.open{opacity:1;pointer-events:auto}
+.modal{position:relative;width:min(860px,100%);max-height:min(88vh,780px);display:flex;flex-direction:column;overflow:hidden;background:var(--surface);border:1px solid var(--line-hi);border-radius:20px;box-shadow:0 40px 120px rgba(0,0,0,.8);transform:translateY(16px) scale(.985);transition:transform .3s var(--ease)}
+.backdrop.open .modal{transform:none}
+.modal-scroll{flex:1;min-height:0;overflow:auto}
+.modal-close{position:absolute;right:16px;top:16px;z-index:5;width:34px;height:34px;border-radius:9px;background:rgba(8,8,8,.75);border:1px solid var(--line-hi);color:var(--text);display:grid;place-items:center;font-size:17px;transition:.2s}
+.modal-close:hover{background:var(--text);color:#080808}
+.modal-head{padding:30px 34px 24px;border-bottom:1px solid var(--line);background:radial-gradient(ellipse 70% 120% at 0% 0%,rgba(212,246,106,.055),transparent 70%)}
+.modal-kicker{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.modal-head h2{font-size:32px;letter-spacing:-.05em;font-weight:600;margin:0 0 10px;font-variant-numeric:tabular-nums}
+.modal-head h2 small{font-size:14px;color:var(--muted);font-weight:450;letter-spacing:0;margin-left:10px;font-family:var(--mono)}
+.modal-head .desc{color:var(--text-2);font-size:13.5px;line-height:1.7;margin:0;max-width:600px}
+.modal-body{padding:26px 34px 24px}
+.spec{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:26px}
+.spec div{background:var(--surface-2);padding:14px 16px}
+.spec .k{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+.spec .v{font-size:12.5px;font-weight:550;font-variant-numeric:tabular-nums}
+.sec-title{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;font-weight:600}
+.chg{margin-bottom:26px}
+.chg ul{list-style:none;margin:0;padding:0}
+.chg li{font-size:12.5px;color:var(--text-2);padding:6px 0 6px 20px;position:relative;line-height:1.6}
+.chg li::before{content:"";position:absolute;left:2px;top:13px;width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.75}
+.chg li b{color:var(--text);font-weight:600;margin-right:8px}
+.pkgs{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.pkg{display:grid;grid-template-columns:34px 1fr auto auto;gap:14px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.pkg:last-child{border-bottom:0}
+.pkg .osic{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;color:var(--text-2)}
+.pkg .pname{font-size:12.5px;font-weight:550;margin-bottom:4px;word-break:break-all}
+.pkg .pmeta{font-family:var(--mono);font-size:9.5px;color:var(--faint);letter-spacing:.03em;word-break:break-all}
+.sha{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 9px;transition:.2s;white-space:nowrap}
+.sha:hover{border-color:var(--line-hi);color:var(--text)}
+.pkg .dl{min-width:96px;justify-content:center}
+.modal-foot{flex-shrink:0;padding:16px 34px 20px;border-top:1px solid var(--line);background:var(--surface)}
+.modal-actions{display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+.modal-actions .note{color:var(--faint);font-size:11.5px;margin-left:auto}
+
+/* ============ Toast ============ */
+.toasts{position:fixed;right:22px;bottom:22px;z-index:110;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none}
+.toast{background:var(--surface-2);border:1px solid var(--line-hi);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 18px 50px rgba(0,0,0,.6);font-size:12.5px;color:var(--text);min-width:250px;transform:translateX(24px);opacity:0;animation:toastIn .3s var(--ease) forwards}
+.toast.out{animation:toastOut .3s var(--ease) forwards}
+.toast .ic{width:24px;height:24px;border-radius:7px;background:var(--accent-dim);color:var(--accent);display:grid;place-items:center;font-size:12px;flex-shrink:0}
+.toast small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+@keyframes toastIn{to{transform:none;opacity:1}}
+@keyframes toastOut{to{transform:translateX(24px);opacity:0}}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+
+/* ============ Responsive ============ */
+@media(max-width:1080px){
+  .nav-links{display:none}
+  .hero-grid{grid-template-columns:1fr;gap:52px}
+  .window{max-width:620px}
+  .release{grid-template-columns:150px 1fr;gap:18px}
+  .rel-side{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;text-align:left;flex-wrap:wrap}
+  .rel-btns{justify-content:flex-start}
+  .foot-top{grid-template-columns:1.4fr repeat(2,1fr)}
+  .foot-col:last-child{display:none}
+}
+@media(max-width:760px){
+  .wrap{width:calc(100% - 36px)}
+  .nav-in{height:64px;gap:12px}
+  .nav-search{display:none}
+  .nav-right .btn-primary span:first-child{display:none}
+  .nav-right .btn-primary{padding:10px 12px}
+  .hero{padding:64px 0 60px}
+  .hero h1{font-size:clamp(38px,10vw,58px)}
+  .hero-sub{font-size:14px}
+  .latest .ver{font-size:32px}
+  .window{transform:none}
+  .float-chip{right:8px;bottom:-14px}
+  .strip-in{grid-template-columns:1fr}
+  .plat{border-right:0;border-bottom:1px solid var(--line);padding:20px 4px}
+  .plat:last-child{border-bottom:0}
+  section.block{padding-top:70px}
+  .sec-head{flex-direction:column;align-items:flex-start;gap:14px}
+  .toolbar{flex-direction:column;align-items:stretch;min-width:0;max-width:100%}
+  .chips{width:100%;min-width:0}
+  .tool-right{width:100%;min-width:0;flex-wrap:wrap;gap:9px}
+  .tool-right .count{margin-right:auto}
+  .select-wrap{flex:1;min-width:0}
+  .select-wrap select{width:100%;min-width:0}
+  .timeline{padding-left:20px}
+  .timeline::before{left:5px}
+  .release{grid-template-columns:1fr;gap:14px;padding:19px 18px}
+  .release::before{left:-19px}
+  .rel-ver .num{font-size:22px}
+  .rel-side{flex-direction:column;align-items:flex-start;gap:10px}
+  .rel-btns{justify-content:flex-start}
+  .info-grid{grid-template-columns:1fr}
+  .cta-in{padding:70px 0}
+  .foot-top{grid-template-columns:1fr 1fr;gap:30px}
+  .foot-brand{grid-column:1/-1}
+  .foot-col:last-child{display:block}
+  .modal-head{padding:20px 18px 16px}
+  .modal-head h2{font-size:23px}
+  .modal-head .desc{font-size:12.5px;line-height:1.6}
+  .modal-body{padding:18px 18px 16px}
+  .spec{grid-template-columns:repeat(2,1fr)}
+  .spec div{padding:9px 12px}
+  .spec .k{font-size:9px;letter-spacing:.08em}
+  .spec .v{font-size:12px}
+  .sec-title{margin-bottom:10px}
+  .chg{margin-bottom:18px}
+  .chg li{font-size:12px;padding:4px 0 4px 17px}
+  .modal-foot{padding:12px 18px 14px}
+  .modal-actions{gap:8px;flex-wrap:nowrap}
+  .modal-actions .btn-primary,.modal-actions .btn-ghost{padding:10px 12px;font-size:11px}
+  .modal-actions .note{display:none}
+  .pkg{grid-template-columns:30px 1fr;gap:10px}
+  .pkg .sha{grid-column:2;justify-self:start}
+  .pkg .dl{grid-column:2;justify-self:start}
+  .toasts{left:16px;right:16px;bottom:16px;align-items:stretch}
+  .toast{min-width:0}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="ambient"><div class="glow" id="glow"></div><div class="glow b"></div></div>
+
+<!-- ===== NAV ===== -->
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="#home" class="brand" aria-label="Start Editor">
+      <span class="brand-mark"><i></i></span>
+      <span class="brand-name">Start<span>Editor</span></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#downloads" data-i18n="navVersions">全部版本</a>
+      <a href="#install" data-i18n="navInstall">安装说明</a>
+      <a href="#about" data-i18n="navAbout">关于</a>
+    </nav>
+    <div class="nav-right">
+      <div class="nav-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="navSearch" type="search" placeholder="搜索版本 / 文件名…" data-i18n-ph="searchPh">
+        <span class="kbd">⌘K</span>
+      </div>
+      <button class="icon-btn" id="langBtn" title="切换语言">EN</button>
+      <a href="#downloads" class="btn-primary"><span data-i18n="navDownload">下载最新版</span><span class="arw">↓</span></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="home">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <div class="hero-badge"><span class="dot"></span><span id="heroBadge"></span></div>
+        <h1><span data-i18n="heroLine1">一个应用，</span><br><em data-i18n="heroLine2">所有版本。</em></h1>
+        <p class="hero-sub" data-i18n="heroSub">下载 Start Editor 的全部构建：Windows 免安装程序、Android 安装包，以及网页单文件版。每个文件都标注真实大小与 SHA-256 校验值。</p>
+
+        <div class="latest">
+          <span class="ver" id="heroVer">v1.0.5</span>
+          <span class="tag" id="heroTag">LATEST</span>
+        </div>
+        <div class="latest-meta" id="heroMeta"></div>
+
+        <div class="hero-actions">
+          <a class="btn-primary" id="heroDownload" href="#downloads"><span data-i18n="heroDl">下载 Windows 版</span><span class="arw">↓</span></a>
+          <a href="#downloads" class="btn-ghost" data-i18n="heroAll">全部文件 <span>↗</span></a>
+        </div>
+        <div class="hero-note"><span class="dot"></span><span data-i18n="heroNote">免安装 exe · Android apk · 网页单文件 html</span></div>
+      </div>
+
+      <div class="window-wrap">
+        <div class="window">
+          <div class="win-bar"><i></i><i></i><i></i><span class="title">START EDITOR — UNTITLED</span><span class="right" id="winVer">v1.0.5</span></div>
+          <div class="win-body">
+            <div class="win-side">
+              <div class="lbl">FILES</div>
+              <div class="file on"><span class="sq"></span>StartEditor.exe</div>
+              <div class="file"><span class="sq"></span>StartEditor.apk</div>
+              <div class="file"><span class="sq"></span>StartEditor.html</div>
+              <div class="file"><span class="sq"></span>SHA256SUMS.txt</div>
+              <div class="lbl" style="margin-top:22px">BUILD</div>
+              <div class="file on"><span class="sq"></span>SEA 1.0.5</div>
+              <div class="file"><span class="sq"></span>ART 1.0.4</div>
+              <div class="file"><span class="sq"></span>STAR 1.0.3</div>
+            </div>
+            <div class="win-main">
+              <div class="win-tabs"><span class="on">editor.se</span><span>console</span><span>+</span></div>
+              <div class="win-canvas" id="winCanvas"></div>
+              <div class="win-status"><span>Ln 24, Col 8 · UTF-8 · <span class="g">● READY</span></span><span>START EDITOR</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="float-chip"><b id="chipVer">v1.0.5</b><span id="chipBuild">BUILD SEA</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PLATFORM STRIP ===== -->
+  <div class="strip">
+    <div class="wrap strip-in" id="strip"></div>
+  </div>
+
+  <!-- ===== RELEASES ===== -->
+  <section class="block" id="downloads">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div>
+          <span class="eyebrow" data-i18n="relEyebrow">下载归档 / 01</span>
+          <h2 data-i18n="relTitle">选择你的构建。</h2>
+          <p data-i18n="relSub">按版本与构建代号归档，共 7 个文件。点击平台按钮即可直接下载对应的安装包。</p>
+        </div>
+        <div class="side" id="relSide"></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="chips" id="chips"></div>
+        <div class="tool-right">
+          <span class="count" id="count"></span>
+          <div class="select-wrap">
+            <select id="osFilter"></select>
+          </div>
+          <div class="select-wrap">
+            <select id="sort">
+              <option value="newest" data-i18n="sortNew">版本号（新→旧）</option>
+              <option value="oldest" data-i18n="sortOld">版本号（旧→新）</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline" id="timeline"></div>
+      <div class="empty" id="empty">
+        <div class="big">⌕</div>
+        <h3 data-i18n="emptyTitle">没有匹配的版本</h3>
+        <p data-i18n="emptySub">换个版本号、代号或平台试试。</p>
+        <button class="btn-ghost" id="resetBtn" data-i18n="emptyBtn">清空筛选</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== INSTALL ===== -->
+  <section class="block" id="install">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div>
+          <span class="eyebrow" data-i18n="insEyebrow">下载之后 / 02</span>
+          <h2 data-i18n="insTitle">怎么装起来。</h2>
+          <p data-i18n="insSub">三个平台都不需要注册或联网激活。Windows 与网页版直接打开即可，Android 需要在系统里放开一次安装权限。</p>
+        </div>
+        <div class="side mono" data-i18n="insSide">免安装 · 绿色运行</div>
+      </div>
+      <div class="info-grid" id="insGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT / CTA ===== -->
+  <section class="cta" id="about">
+    <div class="wrap cta-in reveal">
+      <span class="eyebrow" data-i18n="ctaEyebrow">START EDITOR / 关于</span>
+      <h2 data-i18n="ctaTitle">需要的版本，<br>随时可取。</h2>
+      <p data-i18n="ctaSub">这里归档了 Start Editor 的 3 个版本、共 7 个文件。全部安装包与本页面放在同一目录下，点击即从本地下载 —— 若要对外分享，把整个目录一起上传即可。</p>
+      <div class="row">
+        <a href="#downloads" class="btn-primary"><span data-i18n="ctaBtn1">浏览全部版本</span><span class="arw">↗</span></a>
+        <a href="#home" class="btn-ghost" data-i18n="ctaBtn2">回到顶部</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a href="#home" class="brand"><span class="brand-mark"><i></i></span><span class="brand-name">Start<span>Editor</span></span></a>
+        <p data-i18n="footDesc">Start Editor 的本地版本归档 —— 3 个版本、3 个平台，全部安装包集中在一处。</p>
+      </div>
+      <div class="foot-col"><h4 data-i18n="footH1">下载</h4><a href="#downloads" data-i18n="f1">最新版本</a><a href="#downloads" data-i18n="f2">全部版本</a><a href="#downloads" data-os="windows">Windows</a><a href="#downloads" data-os="android">Android</a></div>
+      <div class="foot-col"><h4 data-i18n="footH2">平台</h4><a href="#install" data-os2="windows">Windows</a><a href="#install" data-os2="android">Android</a><a href="#install" data-os2="web">网页版</a><a href="#install" data-i18n="f5">安装说明</a></div>
+      <div class="foot-col"><h4 data-i18n="footH3">信息</h4><a href="#about" data-i18n="f6">关于</a><a href="#downloads" data-i18n="f7">版本列表</a><a href="#downloads" data-i18n="f8">SHA-256</a><a href="#about" data-i18n="f9">联系方式</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Start Editor. <span data-i18n="footRights">保留所有权利。</span></span>
+      <span class="demo"><span class="dot"></span><span id="footNote"></span></span>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== MODAL ===== -->
+<div class="backdrop" id="backdrop" role="dialog" aria-modal="true">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <div class="modal-scroll" id="modalScroll">
+      <div class="modal-head">
+        <div class="modal-kicker"><span class="badge" id="mBadge"></span><span class="mono" id="mBuild"></span></div>
+        <h2 id="mTitle"></h2>
+        <p class="desc" id="mDesc"></p>
+      </div>
+      <div class="modal-body">
+        <div class="spec" id="mSpec"></div>
+        <h4 class="sec-title" data-i18n="pkgTitle">文件</h4>
+        <div class="pkgs" id="mPkgs"></div>
+        <h4 class="sec-title" data-i18n="chgTitle" style="margin-top:26px">安装说明</h4>
+        <div class="chg"><ul id="mChg"></ul></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div class="modal-actions">
+        <a class="btn-primary" id="mDownload" href="#"><span data-i18n="dlBtn">下载主安装包</span><span class="arw">↓</span></a>
+        <button class="btn-ghost" id="mCopyAll">⧉ <span data-i18n="copyAll">复制全部校验值</span></button>
+        <span class="note" data-i18n="dlNote">文件位于本页面同目录，点击直接下载。</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* =========================================================
+   Start Editor — 版本下载页（真实文件 · 按版本/代号/平台分类）
+   ========================================================= */
+const MB = 1048576;
+
+const PLATFORMS = {
+  windows:{
+    label:{zh:'Windows',en:'Windows'},
+    sub:{zh:'免安装程序 .exe',en:'Portable .exe'},
+    ext:'.exe',
+    howto:{
+      zh:['下载后双击 .exe 直接运行，无需安装。','若出现 SmartScreen 提示，点「更多信息 → 仍要运行」。','建议固定放在一个目录里，移动后快捷方式需重建。'],
+      en:['Double-click the .exe — there is no install step.','If SmartScreen appears, pick "More info → Run anyway".','Keep it in a fixed folder; shortcuts break if you move it.']
+    }
+  },
+  android:{
+    label:{zh:'Android',en:'Android'},
+    sub:{zh:'安装包 .apk',en:'Install package .apk'},
+    ext:'.apk',
+    howto:{
+      zh:['下载 .apk 后在文件管理器中点击安装。','首次安装需在系统设置里允许「安装未知应用」。','若文件名以 .apk.1 结尾，先改回 .apk 再安装。'],
+      en:['Open the downloaded .apk from your file manager.','Allow "install unknown apps" once in system settings.','If the name ends in .apk.1, rename it to .apk first.']
+    }
+  },
+  web:{
+    label:{zh:'网页版',en:'Web'},
+    sub:{zh:'单文件 .html',en:'Single-file .html'},
+    ext:'.html',
+    howto:{
+      zh:['双击 .html 用浏览器打开即可使用。','所有资源都打包在这一个文件里，不用安装。','适合不便安装软件的电脑或临时设备。'],
+      en:['Open the .html in any browser — that is it.','Everything is packed into that one file, no install needed.','Handy on locked-down or borrowed machines.']
+    }
+  }
+};
+const OS_IDS = ['windows','android','web'];
+
+/* ---------- 真实文件清单（字节数与 SHA-256 取自磁盘） ---------- */
+const BUILDS = [
+  {
+    ver:'1.0.5', code:'SEA', channel:'latest',
+    title:{zh:'全平台构建',en:'All-platform build'},
+    desc:{zh:'最新构建，同时提供 Windows、Android 与网页单文件三种形态。',en:'Newest build — ships as Windows, Android and a single-file web app.'},
+    files:[
+      {os:'windows', name:'StartEditor1.0.5 SEA.exe',       path:'dl/StartEditor-1.0.5-SEA-Windows.exe', save:'StartEditor-1.0.5-SEA-Windows.exe', bytes:19759448, sha:'0a413e6e0fb0594ab1e1f198cf58d0620c60e9bfd677be75e6f42951d8009040'},
+      {os:'android', name:'StartEditor1.0.5 SEA.apk.1',     path:'dl/StartEditor-1.0.5-SEA-Android.apk', save:'StartEditor-1.0.5-SEA-Android.apk', bytes:21786115, sha:'56143dab78c6e1ed670b7549f5b8fad5d401993c5edd00e1e0cd330e84fa235c'},
+      {os:'web',     name:'StartEditor_1.0.5 SEA.html',     path:'dl/StartEditor-1.0.5-SEA-Web.html',    save:'StartEditor-1.0.5-SEA-Web.html',    bytes:21679078, sha:'b7f2374f5da11c1c4863f91f10403bd5939a27b570614ae424901ef019963461'}
+    ]
+  },
+  {
+    ver:'1.0.4', code:'ART', channel:'beta',
+    title:{zh:'上一版本',en:'Previous build'},
+    desc:{zh:'保留 Windows 与 Android 两个包，适合仍在使用 1.0.4 的项目。',en:'Windows and Android packages only, for projects still on 1.0.4.'},
+    files:[
+      {os:'windows', name:'StartEditor1.0.4 ART.exe',       path:'dl/StartEditor-1.0.4-ART-Windows.exe', save:'StartEditor-1.0.4-ART-Windows.exe', bytes:19590729, sha:'bff4f27d17bc2bd108b1aa7cd000e6b92a344b33c047d1447be2ea5646be7329'},
+      {os:'android', name:'StartEditor 1.0.4 ART.apk.1',    save:'StartEditor-1.0.4-ART-Android.apk', bytes:27537882, sha:'5d30bfbf8128b8210eb138d73a07b3e72003b71915133d5b9b8c53349d7cecfb',
+       parts:['dl/StartEditor-1.0.4-ART-Android.apk.part1','dl/StartEditor-1.0.4-ART-Android.apk.part2']}
+    ]
+  },
+  {
+    ver:'1.0.3', code:'STAR', channel:'legacy',
+    title:{zh:'历史版本',en:'Archived build'},
+    desc:{zh:'最早的可用构建，仅含 Windows 与 Android，供旧项目回溯。',en:'Earliest available build — Windows and Android only, for legacy projects.'},
+    files:[
+      {os:'windows', name:'StartEditor1.0.3 star.exe',      path:'dl/StartEditor-1.0.3-STAR-Windows.exe', save:'StartEditor-1.0.3-STAR-Windows.exe', bytes:20003430, sha:'66d7cd1a723aa3a90518107c1add051dbf2398b6828c9564a47683fef8771743'},
+      {os:'android', name:'StartEditor 1.0.3STAR.apk.1',    save:'StartEditor-1.0.3-STAR-Android.apk', bytes:30884712, sha:'32a367231bfb4a2a81f81e06be91ceaccc9485a4c17ac082b4adb13fa86533ee',
+       parts:['dl/StartEditor-1.0.3-STAR-Android.apk.part1','dl/StartEditor-1.0.3-STAR-Android.apk.part2']}
+    ]
+  }
+];
+const LATEST = BUILDS[0];
+const ALL_FILES = BUILDS.reduce((a,b)=>a.concat(b.files),[]);
+
+/* ---------- 工具 ---------- */
+const mb = n => (n/MB).toFixed(1)+' MB';
+const buildBytes = b => b.files.reduce((s,f)=>s+f.bytes,0);
+const buildTotal = b => ALL_FILES.length;
+const fileHref = f => f.parts ? f.parts[0] : f.path;
+const fileOf = (b,os) => b.files.find(f=>f.os===os);
+const FILE_MAP = {};
+BUILDS.forEach(b=>b.files.forEach(f=>FILE_MAP[b.ver+'|'+f.os]=f));
+const fileKey = (b,f) => b.ver+'|'+f.os;
+
+const I18N = {
+  zh:{
+    navVersions:'全部版本',navInstall:'安装说明',navAbout:'关于',navDownload:'下载最新版',searchPh:'搜索版本 / 文件名…',
+    heroLine1:'一个应用，',heroLine2:'所有版本。',
+    heroSub:'下载 Start Editor 的全部构建：Windows 免安装程序、Android 安装包，以及网页单文件版。每个文件都标注真实大小与 SHA-256 校验值。',
+    heroDl:'下载 Windows 版',heroAll:'全部文件',heroNote:'免安装 exe · Android apk · 网页单文件 html',
+    relEyebrow:'下载归档 / 01',relTitle:'选择你的构建。',
+    relSub:'按版本与构建代号归档，共 7 个文件。点击平台按钮即可直接下载对应的安装包。',
+    sortNew:'版本号（新→旧）',sortOld:'版本号（旧→新）',osAll:'全部平台',
+    emptyTitle:'没有匹配的版本',emptySub:'换个版本号、代号或平台试试。',emptyBtn:'清空筛选',
+    insEyebrow:'下载之后 / 02',insTitle:'怎么装起来。',
+    insSub:'三个平台都不需要注册或联网激活。Windows 与网页版直接打开即可，Android 需要在系统里放开一次安装权限。',
+    insSide:'免安装 · 绿色运行',
+    ctaEyebrow:'START EDITOR / 关于',ctaTitle:'需要的版本，<br>随时可取。',
+    ctaSub:'这里归档了 Start Editor 的 3 个版本、共 7 个文件。所有安装包都在本站 dl/ 目录，点击即可下载；其中两个 apk 超过托管方 25 MiB 的单文件上限，已拆成分卷，下载时自动合并还原并校验 SHA-256。',
+    ctaBtn1:'浏览全部版本',ctaBtn2:'回到顶部',
+    footDesc:'Start Editor 的本地版本归档 —— 3 个版本、3 个平台，全部安装包集中在一处。',
+    footH1:'下载',f1:'最新版本',f2:'全部版本',footH2:'平台',f5:'安装说明',footH3:'信息',f6:'关于',f7:'版本列表',f8:'SHA-256',f9:'联系方式',
+    footRights:'保留所有权利。',
+    chgTitle:'安装说明',pkgTitle:'文件',dlBtn:'下载推荐版本',copyAll:'复制全部校验值',
+    dlNote:'超过 25 MiB 的包分卷存放，点击后自动合并并校验 SHA-256。',
+    all:'全部版本',latest:'最新',prev:'上一版',legacy:'历史',
+    ver:'版本',code:'代号',files:'文件',total:'合计',size:'大小',platform:'平台',
+    download:'下载',details:'详情',
+    showing:'共',builds:'个版本',filesUnit:'个文件',
+    copySha:'复制 SHA-256',copied:'已复制',copiedSub:'该文件的 SHA-256 校验值已复制到剪贴板。',
+    copiedAll:'已复制全部校验值',copiedAllSub:'7 个文件的 SHA-256 已按 sha256sum 格式复制。',
+    copyFail:'当前浏览器不允许自动复制。',
+    footNote:'本地版本库 · 7 个文件 · 共 153.8 MB'
+  },
+  en:{
+    navVersions:'All versions',navInstall:'How to install',navAbout:'About',navDownload:'Get latest',searchPh:'Search version / file…',
+    heroLine1:'One app.',heroLine2:'Every version.',
+    heroSub:'Every Start Editor build in one place: a portable Windows executable, an Android package, and a single-file web app. Each file lists its real size and SHA-256.',
+    heroDl:'Download for Windows',heroAll:'All files',heroNote:'Portable exe · Android apk · single-file html',
+    relEyebrow:'RELEASE ARCHIVE / 01',relTitle:'Pick your build.',
+    relSub:'Grouped by version and build code — 7 files in total. Hit a platform button to download that package directly.',
+    sortNew:'Version (new → old)',sortOld:'Version (old → new)',osAll:'All platforms',
+    emptyTitle:'No matching build',emptySub:'Try a different version, code or platform.',emptyBtn:'Clear filters',
+    insEyebrow:'AFTER DOWNLOAD / 02',insTitle:'Getting it running.',
+    insSub:'No account, no online activation. Windows and the web build just open; Android needs one permission toggle.',
+    insSide:'PORTABLE · NO INSTALLER',
+    ctaEyebrow:'START EDITOR / ABOUT',ctaTitle:'The right version,<br>right when you need it.',
+    ctaSub:'Three versions, seven files, archived here. Every package lives in the dl/ folder — the two APKs that exceed the host\'s 25 MiB per-file limit ship as parts that merge and verify automatically.',
+    ctaBtn1:'Browse all versions',ctaBtn2:'Back to top',
+    footDesc:'The local Start Editor archive — three versions, three platforms, all packages in one place.',
+    footH1:'Downloads',f1:'Latest',f2:'All versions',footH2:'Platforms',f5:'How to install',footH3:'Info',f6:'About',f7:'Version list',f8:'SHA-256',f9:'Contact',
+    footRights:'All rights reserved.',
+    chgTitle:'How to install',pkgTitle:'Files',dlBtn:'Download recommended',copyAll:'Copy all checksums',
+    dlNote:'Packages over 25 MiB sit in parts — they merge and verify automatically.',
+    all:'All versions',latest:'Latest',prev:'Previous',legacy:'Archived',
+    ver:'Version',code:'Code',files:'Files',total:'Total',size:'Size',platform:'Platform',
+    download:'Download',details:'Details',
+    showing:'Showing',builds:'builds',filesUnit:'files',
+    copySha:'Copy SHA-256',copied:'Copied',copiedSub:'The SHA-256 for this file is in your clipboard.',
+    copiedAll:'All checksums copied',copiedAllSub:'SHA-256 for all 7 files copied in sha256sum format.',
+    copyFail:'Clipboard is blocked in this browser.',
+    footNote:'LOCAL ARCHIVE · 7 FILES · 153.8 MB TOTAL'
+  }
+};
+
+let lang='zh';
+const t=k=>(I18N[lang][k]??k);
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const T=o=>typeof o==='string'?o:(o[lang]??o.en);
+const pLabel=id=>T(PLATFORMS[id].label);
+const badgeKey=ch=>({latest:'stable',beta:'beta',legacy:'legacy'}[ch]);
+const badgeTxt=ch=>({latest:'latest',beta:'prev',legacy:'legacy'}[ch]);
+
+const osIcon=(id,size=18)=>{
+  const p={
+    windows:'<path d="M3.5 5.5 11 4.4v7.1H3.5V5.5Zm8.5-1.2 8.5-1.2v8.4H12V4.3Zm-8.5 7.2H11v7.1l-7.5-1.1v-6Zm8.5 0h8.5v8.4L12 19.4v-7.9Z"/>',
+    android:'<path d="M6 10.5h12V18a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-7.5Z"/><path d="M6 10.5a6 6 0 0 1 12 0"/><path d="m8.6 4.6-1-1.7"/><path d="m15.4 4.6 1-1.7"/><circle cx="9.6" cy="7.6" r=".55"/><circle cx="14.4" cy="7.6" r=".55"/><path d="M4 11.5v5"/><path d="M20 11.5v5"/>',
+    web:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><ellipse cx="12" cy="12" rx="4" ry="8.5"/>'
+  }[id];
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">${p}</svg>`;
+};
+
+/* App window canvas art */
+function canvasArt(){
+  return `<svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+    <defs><pattern id="cg" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0H0V18" fill="none" stroke="rgba(255,255,255,.045)" stroke-width="1"/></pattern></defs>
+    <rect width="360" height="220" fill="url(#cg)"/>
+    <rect x="46" y="28" width="268" height="164" rx="8" fill="rgba(255,255,255,.022)" stroke="rgba(255,255,255,.14)"/>
+    <rect x="46" y="28" width="268" height="24" rx="8" fill="rgba(255,255,255,.035)"/>
+    <rect x="58" y="36" width="9" height="9" rx="2" fill="#d4f66a"/>
+    <rect x="74" y="39" width="70" height="4" rx="2" fill="rgba(255,255,255,.2)"/>
+    <rect x="284" y="37" width="20" height="6" rx="3" fill="rgba(255,255,255,.12)"/>
+    <rect x="62" y="66" width="92" height="110" rx="5" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.09)"/>
+    <rect x="72" y="78" width="52" height="6" rx="3" fill="rgba(255,255,255,.18)"/>
+    <rect x="72" y="94" width="70" height="4" rx="2" fill="rgba(255,255,255,.08)"/>
+    <rect x="72" y="106" width="60" height="4" rx="2" fill="rgba(255,255,255,.08)"/>
+    <rect x="72" y="118" width="66" height="4" rx="2" fill="rgba(255,255,255,.08)"/>
+    <rect x="166" y="66" width="132" height="66" rx="6" fill="rgba(212,246,106,.045)" stroke="rgba(212,246,106,.28)"/>
+    <path d="M180 116 L204 84 L226 108 L246 78 L282 116" fill="none" stroke="#d4f66a" stroke-width="2" opacity=".8"/>
+    <circle cx="204" cy="84" r="3" fill="#d4f66a"/><circle cx="246" cy="78" r="3" fill="#d4f66a"/>
+    <rect x="166" y="142" width="132" height="34" rx="6" fill="rgba(255,255,255,.022)" stroke="rgba(255,255,255,.09)"/>
+    <rect x="178" y="152" width="42" height="5" rx="2" fill="rgba(255,255,255,.16)"/>
+    <rect x="178" y="162" width="86" height="4" rx="2" fill="rgba(255,255,255,.07)"/>
+    <rect x="298" y="20" width="10" height="10" rx="2" fill="#d4f66a"/>
+  </svg>`;
+}
+
+/* ---------- State ---------- */
+let verFilter='all', osFilter='all', query='', sort='newest', current=null, modalPick=null;
+
+/* ---------- Hero / strip ---------- */
+function renderHero(){
+  const win=fileOf(LATEST,'windows');
+  $('#heroVer').textContent='v'+LATEST.ver;
+  $('#winVer').textContent='v'+LATEST.ver;
+  $('#chipVer').textContent='v'+LATEST.ver;
+  $('#chipBuild').textContent='BUILD '+LATEST.code;
+  $('#heroBadge').textContent=(lang==='zh'?'最新版本 · ':'LATEST · ')+LATEST.ver+' '+LATEST.code+(lang==='zh'?' 构建':' BUILD');
+  $('#heroTag').textContent=t('latest').toUpperCase();
+  $('#heroDownload').href=fileHref(win);
+  $('#heroDownload').setAttribute('download',win.save);
+  $('#heroMeta').innerHTML=[
+    [t('code'),LATEST.code],
+    [t('files'),String(LATEST.files.length)],
+    [t('platform'),OS_IDS.map(pLabel).join(' · ')],
+    [t('total'),mb(buildBytes(LATEST))]
+  ].map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join('');
+  $('#winCanvas').innerHTML=canvasArt();
+  $('#relSide').textContent=`${BUILDS.length} ${t('builds').toUpperCase()} · ${ALL_FILES.length} ${t('filesUnit').toUpperCase()}`;
+  $('#footNote').textContent=t('footNote');
+}
+function renderStrip(){
+  $('#strip').innerHTML=OS_IDS.map(id=>{
+    const f=fileOf(LATEST,id);
+    const sub=f?`${T(PLATFORMS[id].sub)} · ${mb(f.bytes)}`:T(PLATFORMS[id].sub);
+    return `<a class="plat" href="${fileHref(f)}" download="${f.save}">
+      <span class="ic">${osIcon(id,20)}</span>
+      <span class="txt"><h4>${pLabel(id)}</h4><p>${sub}</p></span>
+      <span class="arw">↓</span>
+    </a>`;
+  }).join('');
+}
+
+/* ---------- Filters ---------- */
+const buildFiles = b => b.files.filter(f=>osFilter==='all'||f.os===osFilter);
+
+function renderChips(){
+  const items=[{id:'all',label:t('all'),n:ALL_FILES.length}].concat(
+    BUILDS.map(b=>({id:b.ver,label:'v'+b.ver+' '+b.code,n:b.files.length}))
+  );
+  $('#chips').innerHTML=items.map(c=>
+    `<button class="chip ${verFilter===c.id?'on':''}" data-ver="${c.id}">${c.label}<span class="c">${c.n}</span></button>`
+  ).join('');
+  $$('[data-ver]').forEach(b=>b.onclick=()=>{verFilter=b.dataset.ver;renderChips();renderList();});
+
+  $('#osFilter').innerHTML=`<option value="all">${t('osAll')}</option>`+
+    OS_IDS.map(id=>`<option value="${id}" ${osFilter===id?'selected':''}>${pLabel(id)}</option>`).join('');
+}
+
+function visible(){
+  const q=query.trim().toLowerCase();
+  const list=BUILDS.filter(b=>{
+    const vOK=verFilter==='all'||b.ver===verFilter;
+    const fOK=buildFiles(b).length>0;
+    if(!vOK||!fOK)return false;
+    if(!q)return true;
+    const hay=[b.ver,b.code,T(b.title),T(b.desc),...b.files.map(f=>f.name)].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  return list.slice().sort(sort==='oldest'
+    ? (a,b)=>parseFloat(a.ver)-parseFloat(b.ver)
+    : (a,b)=>parseFloat(b.ver)-parseFloat(a.ver));
+}
+
+/* ---------- Release list ---------- */
+function releaseHTML(b){
+  const isLatest=b.ver===LATEST.ver;
+  const files=buildFiles(b);
+  const tags=OS_IDS.map(id=>{
+    const on=b.files.some(f=>f.os===id);
+    return `<span class="${on?'':'na'}">${on?osIcon(id,11):''}${pLabel(id)}</span>`;
+  }).join('');
+  const btns=files.map(f=>
+    `<a class="btn-ghost btn-sm dl-mini" href="${fileHref(f)}" download="${f.save}" data-fkey="${b.ver}|${f.os}">${osIcon(f.os,12)}<span>${PLATFORMS[f.os].ext}</span></a>`
+  ).join('');
+  return `<article class="release ${isLatest?'is-latest':''}" data-id="${b.ver}">
+    <div class="rel-ver">
+      <div class="num">v${b.ver}</div>
+      <span class="badge ${badgeKey(b.channel)}">${t(badgeTxt(b.channel))}</span>
+      <div class="sub">${t('code')} ${b.code} · ${b.files.length} ${t('filesUnit').toUpperCase()}</div>
+    </div>
+    <div class="rel-main">
+      <h3>${T(b.title)}</h3>
+      <p>${T(b.desc)}</p>
+      <div class="rel-tags">${tags}</div>
+    </div>
+    <div class="rel-side">
+      <div class="rel-date"><b>${mb(files.reduce((s,f)=>s+f.bytes,0))}</b>${files.length!==b.files.length?` · ${b.files.length} ${t('filesUnit')}`:''}</div>
+      <div class="rel-btns">${btns}
+        <button class="btn-ghost btn-sm dl-mini" data-open="${b.ver}">${t('details')} ↗</button>
+      </div>
+    </div>
+  </article>`;
+}
+function renderList(){
+  const list=visible();
+  $('#timeline').innerHTML=list.map(releaseHTML).join('');
+  $('#empty').classList.toggle('show',list.length===0);
+  const shown=list.reduce((s,b)=>s+buildFiles(b).length,0);
+  const totalShown=query.trim()||verFilter!=='all'||osFilter!=='all'
+    ? list.reduce((s,b)=>s+b.files.length,0) : ALL_FILES.length;
+  $('#count').textContent=`${t('showing')} ${list.length} ${t('builds')} · ${shown}/${totalShown} ${t('filesUnit')}`;
+  bindList();
+  requestAnimationFrame(()=>$$('.release').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),Math.min(i*55,400))));
+}
+function bindList(){
+  $$('[data-open]').forEach(b=>b.onclick=e=>{e.stopPropagation();openModal(b.dataset.open);});
+  $$('.rel-btns a').forEach(a=>a.addEventListener('click',e=>e.stopPropagation()));
+  $$('.release').forEach(el=>el.onclick=()=>openModal(el.dataset.id));
+  wireDownloads($('#timeline'));
+}
+
+/* ---------- Install cards ---------- */
+function renderInstall(){
+  $('#insGrid').innerHTML=OS_IDS.map(id=>{
+    const f=fileOf(LATEST,id);
+    return `<article class="info-card reveal">
+      <div class="ic">${osIcon(id,20)}</div>
+      <h3>${pLabel(id)} <span style="color:var(--muted);font-weight:400;font-size:11.5px;font-family:var(--mono)">${T(PLATFORMS[id].sub)}</span></h3>
+      <ul>${T(PLATFORMS[id].howto).map(x=>`<li>${x}</li>`).join('')}</ul>
+      <div class="foot">${f?`${mb(f.bytes)} · ${f.save}`:'—'}</div>
+    </article>`;
+  }).join('');
+  observeReveals();
+}
+
+/* ---------- Toast / clipboard ---------- */
+function toast(icon,title,sub){
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<span class="ic">${icon}</span><div>${title}<small>${sub}</small></div>`;
+  $('#toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),320);},3400);
+}
+async function copyText(txt){
+  try{await navigator.clipboard.writeText(txt);return true;}
+  catch(e){
+    try{
+      const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok;
+    }catch(_){return false;}
+  }
+}
+
+/* ---------- 分卷下载：浏览器端合并 + SHA-256 校验 ---------- */
+async function sha256Hex(blob){
+  if(!(window.crypto&&crypto.subtle&&crypto.subtle.digest))return null;
+  const buf=await blob.arrayBuffer();
+  const d=await crypto.subtle.digest('SHA-256',buf);
+  return Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function saveBlob(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;a.style.display='none';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+async function assemble(f,el){
+  if(el.dataset.busy)return;
+  el.dataset.busy='1';
+  const keep=el.innerHTML;
+  const total=f.bytes;
+  let got=0;
+  const chunks=[];
+  try{
+    for(let i=0;i<f.parts.length;i++){
+      const res=await fetch(f.parts[i],{cache:'force-cache'});
+      if(!res.ok)throw new Error('HTTP '+res.status+' — '+f.parts[i]);
+      if(res.body&&res.body.getReader){
+        const reader=res.body.getReader();
+        for(;;){
+          const r=await reader.read();
+          if(r.done)break;
+          chunks.push(r.value);got+=r.value.length;
+          el.textContent=Math.min(99,Math.round(got/total*100))+'%';
+        }
+      }else{
+        const b=await res.blob();
+        chunks.push(b);got+=b.size;
+        el.textContent=Math.min(99,Math.round(got/total*100))+'%';
+      }
+    }
+    const blob=new Blob(chunks,{type:f.os==='android'?'application/vnd.android.package-archive':'application/octet-stream'});
+    el.textContent=lang==='zh'?'校验中':'verifying';
+    const h=await sha256Hex(blob);
+    if(h&&h!==f.sha)throw new Error(lang==='zh'?'SHA-256 不匹配，文件可能没下载完整':'SHA-256 mismatch — download was incomplete');
+    saveBlob(blob,f.save);
+    toast('✓',lang==='zh'?'已合并，开始保存':'Merged — saving now',f.save+' · '+mb(blob.size));
+  }catch(err){
+    toast('!',lang==='zh'?'下载失败':'Download failed',String(err&&err.message||err));
+  }finally{
+    el.innerHTML=keep;
+    delete el.dataset.busy;
+  }
+}
+function wireDownloads(root){
+  (root||document).querySelectorAll('[data-fkey]').forEach(el=>{
+    const f=FILE_MAP[el.dataset.fkey];
+    if(!f||!f.parts)return;
+    el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();assemble(f,el);});
+  });
+}
+
+/* ---------- Modal ---------- */
+function openModal(ver){
+  const b=BUILDS.find(x=>x.ver===ver);if(!b)return;
+  current=ver;
+  $('#modalScroll').scrollTop=0;
+  $('#mBadge').className='badge '+badgeKey(b.channel);
+  $('#mBadge').textContent=t(badgeTxt(b.channel));
+  $('#mBuild').textContent=b.code+' · '+b.ver;
+  $('#mTitle').innerHTML='v'+b.ver+`<small>${T(b.title)}</small>`;
+  $('#mDesc').textContent=T(b.desc);
+  $('#mSpec').innerHTML=[
+    [t('ver'),'v'+b.ver],
+    [t('code'),b.code],
+    [t('files'),String(b.files.length)],
+    [t('total'),mb(buildBytes(b))]
+  ].map(([k,v])=>`<div><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  $('#mPkgs').innerHTML=b.files.map(f=>`
+    <div class="pkg">
+      <span class="osic">${osIcon(f.os,16)}</span>
+      <div><div class="pname">${pLabel(f.os)} · ${PLATFORMS[f.os].ext}</div><div class="pmeta">${f.name} · ${mb(f.bytes)}${f.parts?' · '+f.parts.length+(lang==='zh'?' 卷':' parts'):''}</div></div>
+      <button class="sha" data-sha="${f.sha}" title="${t('copySha')}">SHA-256 ${f.sha.slice(0,8)}… ⧉</button>
+      <a class="btn-primary btn-sm dl" href="${fileHref(f)}" download="${f.save}" data-fkey="${b.ver}|${f.os}">↓ ${t('download')}</a>
+    </div>`).join('');
+  wireDownloads($('#mPkgs'));
+
+  $('#mChg').innerHTML=b.files.map(f=>{
+    const P=PLATFORMS[f.os];
+    return `<li><b>${pLabel(f.os)}</b>${T(P.howto).join(lang==='zh'?'；':' ')+(lang==='zh'?'。':'.')}</li>`;
+  }).join('');
+
+  $$('[data-sha]').forEach(el=>el.onclick=async()=>{
+    const ok=await copyText(el.dataset.sha);
+    toast(ok?'⧉':'!',ok?t('copied'):t('copyFail'),t('copiedSub'));
+  });
+
+  const pick=fileOf(b,osFilter)||b.files[0];
+  const a=$('#mDownload');
+  modalPick=pick;
+  a.href=fileHref(pick);a.setAttribute('download',pick.save);
+  a.querySelector('span').textContent=lang==='zh'?'下载 '+pLabel(pick.os)+' 版':t('dlBtn');
+  $('#backdrop').classList.add('open');
+  document.body.classList.add('no-scroll');
+}
+function closeModal(){
+  $('#backdrop').classList.remove('open');
+  document.body.classList.remove('no-scroll');
+  current=null;
+}
+$('#modalClose').onclick=closeModal;
+$('#mDownload').addEventListener('click',e=>{
+  if(modalPick&&modalPick.parts){e.preventDefault();assemble(modalPick,$('#mDownload'));}
+});
+$('#backdrop').onclick=e=>{if(e.target===$('#backdrop'))closeModal();};
+$('#mCopyAll').onclick=async()=>{
+  const b=BUILDS.find(r=>r.ver===current);if(!b)return;
+  const ok=await copyText(b.files.map(f=>`${f.sha}  ${f.save}`).join('\n'));
+  toast(ok?'⧉':'!',ok?t('copiedAll'):t('copyFail'),t('copiedAllSub'));
+};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){
+    e.preventDefault();$('#navSearch').focus();window.scrollTo({top:0,behavior:'smooth'});
+  }
+});
+
+/* ---------- Search / filters ---------- */
+function setQuery(q,scroll){
+  query=q;$('#navSearch').value=q;renderList();
+  if(scroll)$('#downloads').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('#navSearch').addEventListener('input',e=>setQuery(e.target.value,false));
+$('#navSearch').addEventListener('keydown',e=>{if(e.key==='Enter')setQuery(e.target.value,true);});
+$('#osFilter').onchange=e=>{osFilter=e.target.value;renderList();};
+$('#sort').onchange=e=>{sort=e.target.value;renderList();};
+$('#resetBtn').onclick=()=>{verFilter='all';osFilter='all';query='';sort='newest';
+  $('#sort').value='newest';$('#navSearch').value='';renderChips();renderList();};
+$$('[data-os]').forEach(a=>a.onclick=e=>{
+  e.preventDefault();osFilter=a.dataset.os;verFilter='all';query='';$('#navSearch').value='';
+  renderChips();renderList();$('#downloads').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+/* ---------- Language ---------- */
+function applyLang(){
+  document.documentElement.lang=lang==='zh'?'zh-CN':'en';
+  $$('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;
+    if(k==='ctaTitle')el.innerHTML=t(k);else el.textContent=t(k);
+  });
+  $$('[data-i18n-ph]').forEach(el=>el.placeholder=t(el.dataset.i18nPh));
+  $('#langBtn').textContent=lang==='zh'?'EN':'中';
+  $('#langBtn').title=lang==='zh'?'Switch to English':'切换到中文';
+  renderHero();renderStrip();renderChips();renderList();renderInstall();
+  if(current)openModal(current);
+}
+$('#langBtn').onclick=()=>{lang=lang==='zh'?'en':'zh';applyLang();};
+
+/* ---------- Ambient / reveal ---------- */
+let revealTimer;
+function observeReveals(){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+  $$('.reveal:not(.in)').forEach(el=>io.observe(el));
+  clearTimeout(revealTimer);
+  revealTimer=setTimeout(()=>$$('.reveal:not(.in)').forEach(el=>el.classList.add('in')),900);
+}
+window.addEventListener('scroll',()=>$('#nav').classList.toggle('scrolled',window.scrollY>12),{passive:true});
+const glow=$('#glow');
+document.addEventListener('pointermove',e=>{
+  glow.style.setProperty('--gx',(e.clientX/window.innerWidth*100)+'%');
+  glow.style.setProperty('--gy',(e.clientY/window.innerHeight*100+8)+'%');
+},{passive:true});
+
+/* ---------- Init ---------- */
+applyLang();
+observeReveals();
+</script>
+</body>
+</html>
